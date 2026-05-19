@@ -26,8 +26,10 @@ public class HelloApplication extends Application {
         if (Files.notExists(dbDir)) Files.createDirectories(dbDir);
 
         Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("Import.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("Player.fxml"));
         fxmlLoader.setControllerFactory(springContext::getBean);
+
+        stage.setOnCloseRequest(e -> System.exit(0));
 
         Scene scene = new Scene(fxmlLoader.load(), 1280, 720);
         stage.setTitle("FinalProject");
