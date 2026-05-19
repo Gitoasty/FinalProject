@@ -14,8 +14,6 @@ public class Song {
 
     @Column
     private String name;
-    @Lob
-    @Basic(fetch = FetchType.LAZY)
     @Column
     private byte[] data;
     @Column

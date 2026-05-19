@@ -12,6 +12,9 @@ module com.example.finalproject {
     requires spring.context;
     requires spring.beans;
     requires jaudiotagger;
+    requires spring.data.commons;
+    requires jdk.httpserver;
+    requires uk.co.caprica.vlcj;
 
 
     opens com.example.finalproject to javafx.fxml;
