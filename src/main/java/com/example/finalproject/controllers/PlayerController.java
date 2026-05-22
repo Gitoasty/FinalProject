@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class PlayerController implements Initializable {
@@ -52,6 +54,8 @@ public class PlayerController implements Initializable {
     private Media media;
     private MediaPlayer filePlayer;
     private List<Playlist> playlists;
+
+    //For DB playback
     private List<SongRepo.SongSummary> songSummaries;
     private uk.co.caprica.vlcj.player.base.MediaPlayer dbPlayer;
 
@@ -61,6 +65,11 @@ public class PlayerController implements Initializable {
     private PlaylistSongRepo playlistSongRepo;
     private MediaPlayerFactory factory;
     private HttpServer server;
+
+    //DB seeking
+    private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledFuture<?> progressUpdater;
+    private volatile boolean seekingByUser = false;
 
     public void updateListFile() {
         songList.getItems().clear();
@@ -153,11 +162,15 @@ public class PlayerController implements Initializable {
         factory = new MediaPlayerFactory();
         dbPlayer = factory.mediaPlayers().newMediaPlayer();
         dbPlayer.media().play(songUrl);
+
+        setDbProgress();
+        startDbProgressUpdater();
     }
 
     private void stopDb() {
         dbPlayer.controls().stop();
         server.stop(0);
+        stopDbProgressUpdater();
     }
 
     private String serveSong(byte[] songData) {
@@ -258,6 +271,57 @@ public class PlayerController implements Initializable {
                 playDb(songUrl);
             }
         }
+    }
+
+    private void startDbProgressUpdater() {
+        if (progressUpdater != null && !progressUpdater.isDone()) {
+            progressUpdater.cancel(true);
+        }
+
+        long lengthMs = dbPlayer.media().info().duration();
+        if (lengthMs > 0) {
+            progressBar.setMax(lengthMs / 1000.0);
+        }
+
+        progressUpdater = scheduler.scheduleAtFixedRate(() -> {
+            double length = dbPlayer.media().info().duration() / 1000.0;
+            double posSeconds = dbPlayer.status().time() / 1000.0;
+
+            javafx.application.Platform.runLater(() -> {
+                if (length > 0) {
+                    progressBar.setMax(length);
+                }
+                if (!seekingByUser) {
+                    progressBar.setValue(posSeconds);
+                }
+            });
+        }, 0, 50, TimeUnit.MILLISECONDS);
+    }
+
+    private void stopDbProgressUpdater() {
+        if (progressUpdater != null) {
+            progressUpdater.cancel(true);
+            progressUpdater = null;
+        }
+    }
+
+    private void setDbProgress() {
+        progressBar.setOnMousePressed(e -> {
+            seekingByUser = true;
+            double targetSec = progressBar.getValue();
+            dbPlayer.controls().setTime((long)(targetSec * 1000));
+        });
+
+        progressBar.setOnMouseReleased(e -> {
+            double targetSec = progressBar.getValue();
+            dbPlayer.controls().setTime((long)(targetSec * 1000));
+            seekingByUser = false;
+        });
+
+        progressBar.setOnMouseDragged(e -> {
+            double targetSec = progressBar.getValue();
+            if (seekingByUser) dbPlayer.controls().setTime((long)(targetSec * 1000));
+        });
     }
 
     @Override

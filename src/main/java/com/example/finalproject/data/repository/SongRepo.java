@@ -12,7 +12,6 @@ import java.util.List;
 @Repository
 public interface SongRepo extends JpaRepository<Song, Long> {
     interface SongSummary {
-
         Long getId();
         String getName();
         Long getArtistId();
