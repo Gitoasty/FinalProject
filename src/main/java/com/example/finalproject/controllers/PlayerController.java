@@ -1,6 +1,7 @@
 package com.example.finalproject.controllers;
 
 import com.example.finalproject.data.model.Playlist;
+import com.example.finalproject.data.model.SongEntry;
 import com.example.finalproject.data.repository.PlaylistSongRepo;
 import com.example.finalproject.data.repository.SongRepo;
 import com.example.finalproject.enums.PlayerMode;
@@ -8,12 +9,11 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.Slider;
+import javafx.scene.control.*;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.util.Duration;
@@ -26,14 +26,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Component
 public class PlayerController implements Initializable {
@@ -44,19 +42,19 @@ public class PlayerController implements Initializable {
     @FXML
     private Button prevButton, nextButton;
     @FXML
-    private ListView<String> songList;
+    private ListView<SongEntry> songList;
     private ScheduledExecutorService uiUpdater;
 
     private PlayerMode playerMode;
 
     private HashMap<String, String> songs = new HashMap<>();
-    private String selected;
+    private SongEntry selected;
     private Media media;
     private MediaPlayer filePlayer;
     private List<Playlist> playlists;
 
     //For DB playback
-    private List<SongRepo.SongSummary> songSummaries;
+    private List<SongRepo.SongSummary> songListDb;
     private uk.co.caprica.vlcj.player.base.MediaPlayer dbPlayer;
 
     @Autowired
@@ -78,26 +76,29 @@ public class PlayerController implements Initializable {
         File songFolder = new File(songFolderPathString);
 
         File[] songFiles = songFolder.listFiles();
+        int index = 0;
 
         for (File song : songFiles) {
             String[] tempArray = song.getName().split("\\.");
             String name = Arrays.toString(Arrays.copyOf(tempArray, tempArray.length - 1)).replace("[", "").replace("]", "");
             songs.put(name, song.getAbsolutePath());
-            songList.getItems().add(name);
+            songList.getItems().add(new SongEntry((long) index, name));
+
+            index++;
         }
     }
 
     public void updateListDb() {
-        songSummaries = songRepo.findByIdIn(playlistSongRepo.findSongIdsByPlaylistId(1L));
+        songListDb = songRepo.findByIdIn(playlistSongRepo.findSongIdsByPlaylistId(2L));
 
-        for (SongRepo.SongSummary s : songSummaries) {
+        for (SongRepo.SongSummary s : songListDb) {
             songs.put(s.getName(), s.getId().toString());
-            songList.getItems().add(s.getName());
+            songList.getItems().add(new SongEntry(s));
         }
     }
 
     private void setSongFile() {
-        media = new Media(new File(songs.get(selected)).toURI().toString());
+        media = new Media(new File(songs.get(selected.getName())).toURI().toString());
         filePlayer = new MediaPlayer(media);
 
         filePlayer.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
@@ -111,8 +112,7 @@ public class PlayerController implements Initializable {
         progressBar.setOnMouseDragged(e -> filePlayer.seek(Duration.seconds(progressBar.getValue())));
     }
 
-    private String setSongDb(String songName) {
-        Long songId = Long.valueOf(songs.get(songName));
+    private String setSongDb(Long songId) {
         byte[] songData = songRepo.findDataById(songId);
 
         return serveSong(songData);
@@ -142,7 +142,7 @@ public class PlayerController implements Initializable {
         }
     }
 
-    private void playPauseDb() { //TODO test this
+    private void playPauseDb() {
         if (dbPlayer.status().isPlaying()) {
             dbPlayer.controls().pause();
             return;
@@ -171,6 +171,52 @@ public class PlayerController implements Initializable {
         dbPlayer.controls().stop();
         server.stop(0);
         stopDbProgressUpdater();
+    }
+
+    public void nextSong() {
+        if (playerMode == PlayerMode.DB) {
+            Optional<SongRepo.SongSummary> current = songListDb.stream().filter(
+                    s -> s.getId()==selected.getId())
+                    .findFirst();
+            int index = songListDb.indexOf(current.get());
+
+            if (index==songListDb.size()-1) {
+                index = 0;
+            } else {
+                index++;
+            }
+            System.out.println("Index: " + index);
+            System.out.println("Length " + songListDb.size());
+
+            SongEntry next = new SongEntry(
+                    songListDb.get(index)
+            );
+            selectSong(next);
+        } else if (playerMode == PlayerMode.FILE) {
+            return;
+        }
+    }
+
+    public void prevSong() {
+        if (playerMode == PlayerMode.DB) {
+            Optional<SongRepo.SongSummary> current = songListDb.stream().filter(
+                            s -> s.getId()==selected.getId())
+                    .findFirst();
+            int index = songListDb.indexOf(current.get());
+
+            if (index==0) {
+                index = songListDb.size()-1;
+            } else {
+                index--;
+            }
+
+            SongEntry next = new SongEntry(
+                    songListDb.get(index)
+            );
+            selectSong(next);
+        } else if (playerMode == PlayerMode.FILE) {
+            return;
+        }
     }
 
     private String serveSong(byte[] songData) {
@@ -250,21 +296,21 @@ public class PlayerController implements Initializable {
         }
     }
 
-    private void selectSong(String songName) {
-        songTitle.setText(songName);
-        System.out.println("Selected: " + songName);
+    private void selectSong(SongEntry songEntry) {
+        songTitle.setText(songEntry.getName());
+        System.out.println("Selected: " + songEntry);
 
         if (playerMode == PlayerMode.FILE) {
             if (selected != null) {
                 stopFile();
             }
 
-            selected = songName;
+            selected = songEntry;
             setSongFile();
             playPauseFile();
         } else if (playerMode == PlayerMode.DB) {
-            selected = songName;
-            String songUrl = setSongDb(songName);
+            selected = songEntry;
+            String songUrl = setSongDb(songEntry.getId());
             System.out.println("working up to here");
             if (!songUrl.isEmpty()) {
                 System.out.println("song url is: " + songUrl);
@@ -359,6 +405,19 @@ public class PlayerController implements Initializable {
             } else if (playerMode == PlayerMode.DB) {
                 if (dbPlayer != null && factory != null) {
                     dbPlayer.audio().setVolume((int) volumeBar.getValue());
+                }
+            }
+        });
+
+        songList.setCellFactory(lv -> new ListCell<SongEntry>() {
+            @Override
+            protected void updateItem(SongEntry s, boolean empty) {
+                super.updateItem(s, empty);
+                if (empty || s == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(s.getName());
                 }
             }
         });

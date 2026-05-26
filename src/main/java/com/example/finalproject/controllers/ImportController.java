@@ -84,12 +84,37 @@ public class ImportController implements Initializable {
             for (File song : songs) {
                 boolean skip = false;
 
+                AudioFile audioFile = null;
+                Tag tag = null;
+
+                String name = null;
+                String artist = null;
+                String album = null;
+                String year = null;
+
                 try {
-                    AudioFile audioFile = AudioFileIO.read(song);
-                    Tag tag = audioFile.getTag();
-                    String name = tag.getFirst(FieldKey.TITLE);
-                    String artist = tag.getFirst(FieldKey.ARTIST);
-                    String album = tag.getFirst(FieldKey.ALBUM);
+                    try {
+                        audioFile = AudioFileIO.read(song);
+                        tag = audioFile.getTag();
+                        name = tag.getFirst(FieldKey.TITLE);
+                        artist = tag.getFirst(FieldKey.ARTIST);
+                        album = tag.getFirst(FieldKey.ALBUM);
+                        year = tag.getFirst(FieldKey.YEAR);
+                    } catch (Exception e) {
+                        if (name == null) {
+                            name = song.getName().split(" - ")[0];
+                        }
+
+                        if (artist == null) {
+                            String[] elements = song.getName().split(" - ");
+
+                            artist = elements[elements.length-1].split(",")[0].replace(".mp3", "");
+                        }
+
+                        if (album == null) {
+                            album = "";
+                        }
+                    }
 
                     List<String> existingArtistNames = existingArtists.stream().map(Artist::getName).toList();
                     Long artistId = 0L;
@@ -151,13 +176,19 @@ public class ImportController implements Initializable {
 
                     Song songToSave = new Song();
 
-                    songToSave.setName(tag.getFirst(FieldKey.TITLE));
+                    songToSave.setName(name);
                     songToSave.setData(Files.readAllBytes(song.toPath()));
                     songToSave.setArtistId(artistId);
                     songToSave.setAlbumId(albumId);
-                    songToSave.setLength((long) audioFile.getAudioHeader().getTrackLength());
+
+                    if (audioFile != null) {
+                        songToSave.setLength((long) audioFile.getAudioHeader().getTrackLength());
+                    } else {
+                        songToSave.setLength(0L);
+                    }
+
                     songToSave.setPlays(0L);
-                    songToSave.setReleaseYear(tag.getFirst(FieldKey.YEAR));
+                    songToSave.setReleaseYear(year);
                     songToSave.setNote("");
                     songToSave.setLiked(false);
 
@@ -176,7 +207,8 @@ public class ImportController implements Initializable {
                         playlistSongRepo.saveAll(linkBatch);
                         linkBatch.clear();
                     }
-                } catch (Exception _) {
+                } catch (Exception e) {
+                    e.printStackTrace();
                     System.out.println("This is the problem one-" + song.getName());
                 }
 

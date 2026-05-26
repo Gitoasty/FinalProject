@@ -22,7 +22,4 @@ public interface SongRepo extends JpaRepository<Song, Long> {
 
     @Query(value = "SELECT s.data FROM Song s WHERE s.id = :id")
     byte[] findDataById(@Param("id") Long id);
-
-//    @Query("SELECT new com.example.finalproject.data.SongDataDTO(s.data) FROM Song s WHERE s.id = :id")
-//    SongDataDTO findDataById(@Param("id") Long id);
 }

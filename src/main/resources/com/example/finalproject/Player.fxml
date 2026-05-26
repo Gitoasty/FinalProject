@@ -27,9 +27,9 @@
             <Label fx:id="songTitle" text="Title" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
             <Slider fx:id="progressBar" prefHeight="24.0" prefWidth="478.0" GridPane.columnSpan="3" GridPane.rowIndex="1" />
             <Slider fx:id="volumeBar" orientation="VERTICAL" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
-            <Button fx:id="prevButton" mnemonicParsing="false" text="Prev" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
+            <Button fx:id="prevButton" mnemonicParsing="false" onAction="#prevSong" text="Prev" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
             <Button fx:id="playButton" mnemonicParsing="false" onAction="#playPause" text="Play/Pause" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
-            <Button fx:id="nextButton" mnemonicParsing="false" text="Next" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
+            <Button fx:id="nextButton" mnemonicParsing="false" onAction="#nextSong" text="Next" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
             <ListView fx:id="songList" prefHeight="200.0" prefWidth="200.0" />
          </children>
       </GridPane>
