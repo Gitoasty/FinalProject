@@ -31,7 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Component
 public class PlayerController implements Initializable {
@@ -40,10 +40,7 @@ public class PlayerController implements Initializable {
     @FXML
     private Label songTitle;
     @FXML
-    private Button prevButton, nextButton;
-    @FXML
     private ListView<SongEntry> songList;
-    private ScheduledExecutorService uiUpdater;
 
     private PlayerMode playerMode;
 
@@ -176,7 +173,7 @@ public class PlayerController implements Initializable {
     public void nextSong() {
         if (playerMode == PlayerMode.DB) {
             Optional<SongRepo.SongSummary> current = songListDb.stream().filter(
-                    s -> s.getId()==selected.getId())
+                    s -> Objects.equals(s.getId(), selected.getId()))
                     .findFirst();
             int index = songListDb.indexOf(current.get());
 
@@ -185,15 +182,28 @@ public class PlayerController implements Initializable {
             } else {
                 index++;
             }
-            System.out.println("Index: " + index);
-            System.out.println("Length " + songListDb.size());
 
             SongEntry next = new SongEntry(
                     songListDb.get(index)
             );
+
+            int indexSong = IntStream.range(0, songList.getItems().size())
+                    .filter(i -> songList.getItems().get(i).getId().equals(next.getId())).findFirst()
+                    .orElse(-1);
+
+            songList.getSelectionModel().select(indexSong);
             selectSong(next);
         } else if (playerMode == PlayerMode.FILE) {
-            return;
+            int index = songList.getSelectionModel().getSelectedIndex();
+
+            if (index == songList.getItems().size()-1) {
+                index = 0;
+            } else {
+                index++;
+            }
+
+            songList.getSelectionModel().select(index);
+            selectSong(songList.getSelectionModel().getSelectedItem());
         }
     }
 
@@ -210,12 +220,28 @@ public class PlayerController implements Initializable {
                 index--;
             }
 
-            SongEntry next = new SongEntry(
+            SongEntry prev = new SongEntry(
                     songListDb.get(index)
             );
-            selectSong(next);
+
+            int indexSong = IntStream.range(0, songList.getItems().size())
+                    .filter(i -> songList.getItems().get(i).getId().equals(prev.getId())).findFirst()
+                    .orElse(-1);
+
+            songList.getSelectionModel().select(indexSong);
+
+            selectSong(prev);
         } else if (playerMode == PlayerMode.FILE) {
-            return;
+            int index = songList.getSelectionModel().getSelectedIndex();
+
+            if (index == 0) {
+                index = songList.getItems().size()-1;
+            } else {
+                index--;
+            }
+
+            songList.getSelectionModel().select(index);
+            selectSong(songList.getSelectionModel().getSelectedItem());
         }
     }
 
