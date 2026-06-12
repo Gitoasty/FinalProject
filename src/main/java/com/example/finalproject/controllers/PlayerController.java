@@ -9,8 +9,6 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -68,7 +66,7 @@ public class PlayerController implements Initializable {
 
     public void updateListFile() {
         songList.getItems().clear();
-        String songFolderPathString = "G:\\downloaded_music\\Anymez";
+        String songFolderPathString = "/media/Toasty/Stuff/downloaded_music/Anymez/";
 
         File songFolder = new File(songFolderPathString);
 
@@ -398,7 +396,7 @@ public class PlayerController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        playerMode = PlayerMode.DB;
+        playerMode = PlayerMode.FILE;
 
         factory = new MediaPlayerFactory();
         dbPlayer = factory.mediaPlayers().newMediaPlayer();
