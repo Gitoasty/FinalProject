@@ -2,7 +2,6 @@ package com.example.finalproject.controllers;
 
 import com.example.finalproject.data.model.*;
 import com.example.finalproject.data.repository.*;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -44,7 +43,7 @@ public class ImportController implements Initializable {
 
     private File selectedDirectory;
 
-    public void choose(ActionEvent e) {
+    public void choose() {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select playlist folder");
 
@@ -57,7 +56,7 @@ public class ImportController implements Initializable {
 
     public void importPlaylist() {
         if (selectedDirectory != null) {
-            List<File> songs = Arrays.asList(selectedDirectory.listFiles());
+            File[] songs = selectedDirectory.listFiles();
 
             int progress = 0;
             importProgress.setProgress(progress);
@@ -82,15 +81,21 @@ public class ImportController implements Initializable {
             List<PlaylistSong> linkBatch = new ArrayList<>(batchSize);
 
             for (File song : songs) {
+                if (song.length() < 1000L) {
+                    System.out.println("File is corrupted or empty - " + song.getName());
+                    continue;
+                }
+
                 boolean skip = false;
 
                 AudioFile audioFile = null;
-                Tag tag = null;
+                Tag tag;
 
                 String name = null;
                 String artist = null;
                 String album = null;
                 String year = null;
+
 
                 try {
                     try {

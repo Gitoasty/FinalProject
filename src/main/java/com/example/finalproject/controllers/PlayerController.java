@@ -42,9 +42,8 @@ public class PlayerController implements Initializable {
 
     private PlayerMode playerMode;
 
-    private HashMap<String, String> songs = new HashMap<>();
+    private final HashMap<String, String> songs = new HashMap<>();
     private SongEntry selected;
-    private Media media;
     private MediaPlayer filePlayer;
     private List<Playlist> playlists;
 
@@ -60,7 +59,7 @@ public class PlayerController implements Initializable {
     private HttpServer server;
 
     //DB seeking
-    private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> progressUpdater;
     private volatile boolean seekingByUser = false;
 
@@ -73,13 +72,15 @@ public class PlayerController implements Initializable {
         File[] songFiles = songFolder.listFiles();
         int index = 0;
 
-        for (File song : songFiles) {
-            String[] tempArray = song.getName().split("\\.");
-            String name = Arrays.toString(Arrays.copyOf(tempArray, tempArray.length - 1)).replace("[", "").replace("]", "");
-            songs.put(name, song.getAbsolutePath());
-            songList.getItems().add(new SongEntry((long) index, name));
+        if (songFiles != null) {
+            for (File song : songFiles) {
+                String[] tempArray = song.getName().split("\\.");
+                String name = Arrays.toString(Arrays.copyOf(tempArray, tempArray.length - 1)).replace("[", "").replace("]", "");
+                songs.put(name, song.getAbsolutePath());
+                songList.getItems().add(new SongEntry((long) index, name));
 
-            index++;
+                index++;
+            }
         }
     }
 
@@ -93,18 +94,18 @@ public class PlayerController implements Initializable {
     }
 
     private void setSongFile() {
-        media = new Media(new File(songs.get(selected.getName())).toURI().toString());
+        Media media = new Media(new File(songs.get(selected.getName())).toURI().toString());
         filePlayer = new MediaPlayer(media);
 
-        filePlayer.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
+        filePlayer.currentTimeProperty().addListener((_, _, newTime) -> {
             if (!progressBar.isValueChanging()) {
                 progressBar.setValue(newTime.toSeconds());
             }
         });
         filePlayer.setVolume(volumeBar.getValue() * 0.01);
 
-        progressBar.setOnMousePressed(e -> filePlayer.seek(Duration.seconds(progressBar.getValue())));
-        progressBar.setOnMouseDragged(e -> filePlayer.seek(Duration.seconds(progressBar.getValue())));
+        progressBar.setOnMousePressed(_ -> filePlayer.seek(Duration.seconds(progressBar.getValue())));
+        progressBar.setOnMouseDragged(_ -> filePlayer.seek(Duration.seconds(progressBar.getValue())));
     }
 
     private String setSongDb(Long songId) {
@@ -208,7 +209,7 @@ public class PlayerController implements Initializable {
     public void prevSong() {
         if (playerMode == PlayerMode.DB) {
             Optional<SongRepo.SongSummary> current = songListDb.stream().filter(
-                            s -> s.getId()==selected.getId())
+                            s -> Objects.equals(s.getId(), selected.getId()))
                     .findFirst();
             int index = songListDb.indexOf(current.get());
 
@@ -376,19 +377,19 @@ public class PlayerController implements Initializable {
     }
 
     private void setDbProgress() {
-        progressBar.setOnMousePressed(e -> {
+        progressBar.setOnMousePressed(_ -> {
             seekingByUser = true;
             double targetSec = progressBar.getValue();
             dbPlayer.controls().setTime((long)(targetSec * 1000));
         });
 
-        progressBar.setOnMouseReleased(e -> {
+        progressBar.setOnMouseReleased(_ -> {
             double targetSec = progressBar.getValue();
             dbPlayer.controls().setTime((long)(targetSec * 1000));
             seekingByUser = false;
         });
 
-        progressBar.setOnMouseDragged(e -> {
+        progressBar.setOnMouseDragged(_ -> {
             double targetSec = progressBar.getValue();
             if (seekingByUser) dbPlayer.controls().setTime((long)(targetSec * 1000));
         });
@@ -396,7 +397,7 @@ public class PlayerController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        playerMode = PlayerMode.FILE;
+        playerMode = PlayerMode.DB;
 
         factory = new MediaPlayerFactory();
         dbPlayer = factory.mediaPlayers().newMediaPlayer();
@@ -412,18 +413,14 @@ public class PlayerController implements Initializable {
         volumeBar.setMin(0);
         volumeBar.setMax(100);
 
-        if (playerMode == PlayerMode.FILE) {
-            volumeBar.setValue(100);
-        } else if (playerMode == PlayerMode.DB) {
-            volumeBar.setValue(dbPlayer.audio().volume());
-        }
+        volumeBar.setValue(100);
 
         volumeBar.setMajorTickUnit(50);
         volumeBar.setMinorTickCount(10);
         volumeBar.setShowTickMarks(true);
         volumeBar.setShowTickLabels(true);
 
-        volumeBar.valueProperty().addListener((observableValue, number, t1) -> {
+        volumeBar.valueProperty().addListener((_, _, _) -> {
             if (playerMode == PlayerMode.FILE) {
                 filePlayer.setVolume(volumeBar.getValue() * 0.01);
             } else if (playerMode == PlayerMode.DB) {
@@ -433,7 +430,7 @@ public class PlayerController implements Initializable {
             }
         });
 
-        songList.setCellFactory(lv -> new ListCell<SongEntry>() {
+        songList.setCellFactory(_ -> new ListCell<>() {
             @Override
             protected void updateItem(SongEntry s, boolean empty) {
                 super.updateItem(s, empty);
@@ -446,7 +443,7 @@ public class PlayerController implements Initializable {
             }
         });
 
-        songList.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+        songList.getSelectionModel().selectedItemProperty().addListener((_, _, newVal) -> {
             if (newVal != null) {
                 selectSong(newVal);
             }
