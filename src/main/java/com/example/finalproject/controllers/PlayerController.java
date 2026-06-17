@@ -2,6 +2,7 @@ package com.example.finalproject.controllers;
 
 import com.example.finalproject.data.model.Playlist;
 import com.example.finalproject.data.model.SongEntry;
+import com.example.finalproject.data.repository.PlaylistRepo;
 import com.example.finalproject.data.repository.PlaylistSongRepo;
 import com.example.finalproject.data.repository.SongRepo;
 import com.example.finalproject.enums.PlayerMode;
@@ -9,12 +10,15 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.util.Duration;
+import javafx.util.StringConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
@@ -39,6 +43,8 @@ public class PlayerController implements Initializable {
     private Label songTitle;
     @FXML
     private ListView<SongEntry> songList;
+    @FXML
+    private ChoiceBox<Playlist> playlistBox;
 
     private PlayerMode playerMode;
 
@@ -55,6 +61,8 @@ public class PlayerController implements Initializable {
     private SongRepo songRepo;
     @Autowired
     private PlaylistSongRepo playlistSongRepo;
+    @Autowired
+    private PlaylistRepo playlistRepo;
     private MediaPlayerFactory factory;
     private HttpServer server;
 
@@ -84,8 +92,12 @@ public class PlayerController implements Initializable {
         }
     }
 
-    public void updateListDb() {
-        songListDb = songRepo.findByIdIn(playlistSongRepo.findSongIdsByPlaylistId(2L));
+    public void updateListDb(Long id) {
+        System.out.println("Received id: " + id);
+        songListDb = songRepo.findByIdIn(playlistSongRepo.findSongIdsByPlaylistId(id));
+
+        songs.clear();
+        songList.getItems().clear();
 
         for (SongRepo.SongSummary s : songListDb) {
             songs.put(s.getName(), s.getId().toString());
@@ -173,7 +185,7 @@ public class PlayerController implements Initializable {
         if (playerMode == PlayerMode.DB) {
             Optional<SongRepo.SongSummary> current = songListDb.stream().filter(
                     s -> Objects.equals(s.getId(), selected.getId()))
-                    .findFirst();
+                    .findFirst(); //TODO disable prev/next if selected playlist is not one the song was played from
             int index = songListDb.indexOf(current.get());
 
             if (index==songListDb.size()-1) {
@@ -395,6 +407,24 @@ public class PlayerController implements Initializable {
         });
     }
 
+    private void setPlaylistsDb() {
+        ObservableList<Playlist> list = FXCollections.observableArrayList(playlistRepo.findAll());
+
+        playlistBox.setItems(list);
+    }
+
+    private void choosePlaylist() {
+        System.out.println("choosing");
+        if (playerMode == PlayerMode.DB) {
+            System.out.println("picking");
+            Playlist selected = playlistBox.getSelectionModel().getSelectedItem();
+
+            System.out.println("Picked " + selected.getName());
+
+            updateListDb(selected.getId());
+        }
+    }
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         playerMode = PlayerMode.DB;
@@ -405,7 +435,9 @@ public class PlayerController implements Initializable {
         if (playerMode == PlayerMode.FILE) {
             updateListFile();
         } else if (playerMode == PlayerMode.DB) {
-            updateListDb();
+            setPlaylistsDb();
+
+            updateListDb(2L);
         }
 
         progressBar.setMin(0);
@@ -448,5 +480,20 @@ public class PlayerController implements Initializable {
                 selectSong(newVal);
             }
         });
+
+        playlistBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(Playlist p) {
+                return p == null ? "" : p.getName();
+            }
+
+            @Override
+            public Playlist fromString(String string) {
+                return null;
+            }
+        });
+        System.out.println("1");
+        playlistBox.setOnAction(_ -> choosePlaylist());
+        System.out.println("2");
     }
 }
