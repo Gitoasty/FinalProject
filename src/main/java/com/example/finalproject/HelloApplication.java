@@ -29,10 +29,12 @@ public class HelloApplication extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("Player.fxml"));
         fxmlLoader.setControllerFactory(springContext::getBean);
 
-        stage.setOnCloseRequest(e -> System.exit(0));
+        stage.setOnCloseRequest(_ -> System.exit(0));
 
         Scene scene = new Scene(fxmlLoader.load(), 1280, 720);
         stage.setTitle("FinalProject");
+        stage.setMinWidth(750);
+        stage.setMinHeight(400);
         stage.setScene(scene);
         stage.show();
     }
