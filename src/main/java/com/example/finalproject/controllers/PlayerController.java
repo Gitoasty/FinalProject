@@ -171,6 +171,7 @@ public class PlayerController implements Initializable {
         dbPlayer = factory.mediaPlayers().newMediaPlayer();
         dbPlayer.media().play(songUrl);
 
+
         setDbProgress();
         startDbProgressUpdater();
     }
@@ -185,7 +186,14 @@ public class PlayerController implements Initializable {
         if (playerMode == PlayerMode.DB) {
             Optional<SongRepo.SongSummary> current = songListDb.stream().filter(
                     s -> Objects.equals(s.getId(), selected.getId()))
-                    .findFirst(); //TODO disable prev/next if selected playlist is not one the song was played from
+                    .findFirst();
+
+            if (!playlistSongRepo.findSongIdsByPlaylistId(
+                            playlistBox.getSelectionModel().getSelectedItem().getId())
+                    .contains(selected.getId())) {
+                return;
+            }
+
             int index = songListDb.indexOf(current.get());
 
             if (index==songListDb.size()-1) {
@@ -204,7 +212,7 @@ public class PlayerController implements Initializable {
 
             songList.getSelectionModel().select(indexSong);
             selectSong(next);
-        } else if (playerMode == PlayerMode.FILE) {
+        } else if (playerMode == PlayerMode.FILE) { //TODO disable prev/next if selected playlist is not one the song was played from
             int index = songList.getSelectionModel().getSelectedIndex();
 
             if (index == songList.getItems().size()-1) {
@@ -346,6 +354,8 @@ public class PlayerController implements Initializable {
             setSongFile();
             playPauseFile();
         } else if (playerMode == PlayerMode.DB) {
+            if (!songListDb.stream().map(SongRepo.SongSummary::getId).toList().contains(songEntry.getId())) return;
+
             selected = songEntry;
             String songUrl = setSongDb(songEntry.getId());
             System.out.println("working up to here");
@@ -371,6 +381,10 @@ public class PlayerController implements Initializable {
             double posSeconds = dbPlayer.status().time() / 1000.0;
 
             javafx.application.Platform.runLater(() -> {
+                if (length > 2 && (length - posSeconds < 1)) {
+                    nextSong();
+                }
+
                 if (length > 0) {
                     progressBar.setMax(length);
                 }
