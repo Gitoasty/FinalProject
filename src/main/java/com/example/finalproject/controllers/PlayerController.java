@@ -12,11 +12,16 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import javafx.stage.DirectoryChooser;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +50,8 @@ public class PlayerController implements Initializable {
     private ListView<SongEntry> songList;
     @FXML
     private ChoiceBox<Playlist> playlistBox;
+    @FXML
+    private GridPane parentPane;
 
     private PlayerMode playerMode;
 
@@ -52,6 +59,7 @@ public class PlayerController implements Initializable {
     private SongEntry selected;
     private MediaPlayer filePlayer;
     private List<Playlist> playlists;
+    private String parentPlaylistPath;
 
     //For DB playback
     private List<SongRepo.SongSummary> songListDb;
@@ -71,9 +79,8 @@ public class PlayerController implements Initializable {
     private ScheduledFuture<?> progressUpdater;
     private volatile boolean seekingByUser = false;
 
-    public void updateListFile() {
+    public void updateListFile(String songFolderPathString) {
         songList.getItems().clear();
-        String songFolderPathString = "/media/Toasty/Stuff/downloaded_music/Anymez/";
 
         File songFolder = new File(songFolderPathString);
 
@@ -421,6 +428,40 @@ public class PlayerController implements Initializable {
         });
     }
 
+    private void choose(ActionEvent e) {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle("Select playlist folder");
+
+        Button source = (Button) e.getSource();
+
+        String selectedDirectory = String.valueOf(directoryChooser.showDialog(source.getScene().getWindow()));
+
+        if (selectedDirectory != null) {
+            setPlaylistsFile(selectedDirectory);
+        }
+    }
+
+    private void setPlaylistsFile(String selectedDirectory) {
+        File rootFolder = new File(selectedDirectory);
+        File[] playlistFolders = rootFolder.listFiles(File::isDirectory);
+
+        if (playlistFolders != null) {
+            List<String> tempList = Arrays.stream(playlistFolders)
+                    .map(File::getAbsolutePath)
+                    .toList();
+
+            List<Playlist> insertList = new ArrayList<>();
+
+            for (int i = 0; i< tempList.size(); i++) {
+                insertList.add(new Playlist((long) i, tempList.get(i)));
+            }
+
+            ObservableList<Playlist> list = FXCollections.observableArrayList(insertList);
+
+            playlistBox.setItems(list);
+        }
+    }
+
     private void setPlaylistsDb() {
         ObservableList<Playlist> list = FXCollections.observableArrayList(playlistRepo.findAll());
 
@@ -428,30 +469,51 @@ public class PlayerController implements Initializable {
     }
 
     private void choosePlaylist() {
-        System.out.println("choosing");
+        Playlist selected = playlistBox.getSelectionModel().getSelectedItem();
+
         if (playerMode == PlayerMode.DB) {
-            System.out.println("picking");
-            Playlist selected = playlistBox.getSelectionModel().getSelectedItem();
-
-            System.out.println("Picked " + selected.getName());
-
             updateListDb(selected.getId());
+        } else if (playerMode == PlayerMode.FILE) {
+            updateListFile(selected.getName());
         }
     }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        playerMode = PlayerMode.DB;
+        playerMode = PlayerMode.FILE;
 
         factory = new MediaPlayerFactory();
         dbPlayer = factory.mediaPlayers().newMediaPlayer();
 
         if (playerMode == PlayerMode.FILE) {
-            updateListFile();
+            playlistBox.maxWidthProperty().bind(
+                    parentPane.widthProperty()
+                            .multiply(parentPane.getColumnConstraints()
+                                    .getFirst()
+                                    .getPercentWidth() / 100.0)
+                            .multiply(0.45)
+            );
+            GridPane.setHalignment(playlistBox, HPos.RIGHT);
+
+            Button pickerButton = new Button();
+            pickerButton.maxWidthProperty().bind(
+                    parentPane.widthProperty()
+                            .multiply(parentPane.getColumnConstraints()
+                                    .getFirst()
+                                    .getPercentWidth() / 100.0)
+                            .multiply(0.45)
+            );
+            pickerButton.setOnAction(this::choose);
+
+            parentPane.add(pickerButton, 0, 0);
+            GridPane.setHalignment(pickerButton, HPos.LEFT);
+            GridPane.setMargin(pickerButton, new Insets(5, 5, 5, 5));
         } else if (playerMode == PlayerMode.DB) {
             setPlaylistsDb();
 
-            updateListDb(2L);
+            if (!playlistRepo.findAll().isEmpty()) {
+                updateListDb(1L);
+            }
         }
 
         progressBar.setMin(0);
@@ -506,8 +568,6 @@ public class PlayerController implements Initializable {
                 return null;
             }
         });
-        System.out.println("1");
         playlistBox.setOnAction(_ -> choosePlaylist());
-        System.out.println("2");
     }
 }
