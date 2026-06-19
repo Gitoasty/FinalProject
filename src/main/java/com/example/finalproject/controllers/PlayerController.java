@@ -33,6 +33,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -122,6 +125,8 @@ public class PlayerController implements Initializable {
             }
         });
         filePlayer.setVolume(volumeBar.getValue() * 0.01);
+
+        filePlayer.setOnEndOfMedia(this::nextSong);
 
         progressBar.setOnMousePressed(_ -> filePlayer.seek(Duration.seconds(progressBar.getValue())));
         progressBar.setOnMouseDragged(_ -> filePlayer.seek(Duration.seconds(progressBar.getValue())));
@@ -219,17 +224,28 @@ public class PlayerController implements Initializable {
 
             songList.getSelectionModel().select(indexSong);
             selectSong(next);
-        } else if (playerMode == PlayerMode.FILE) { //TODO disable prev/next if selected playlist is not one the song was played from
+        } else if (playerMode == PlayerMode.FILE) {
             int index = songList.getSelectionModel().getSelectedIndex();
-
-            if (index == songList.getItems().size()-1) {
-                index = 0;
-            } else {
-                index++;
+            if (index == -1) {
+                return;
             }
 
-            songList.getSelectionModel().select(index);
-            selectSong(songList.getSelectionModel().getSelectedItem());
+            Path folder = Paths.get(playlistBox.getSelectionModel().getSelectedItem().getName());
+            Path file = folder.resolve(songList.getSelectionModel().getSelectedItem().getName() + ".mp3");
+
+            System.out.println("1");
+            System.out.println(new File(file.toUri()).getAbsolutePath());
+            if (Files.exists(file) && Files.isRegularFile(file)) {
+                System.out.println("2");
+                if (index == songList.getItems().size()-1) {
+                    index = 0;
+                } else {
+                    index++;
+                }
+
+                songList.getSelectionModel().select(index);
+                selectSong(songList.getSelectionModel().getSelectedItem());
+            }
         }
     }
 
@@ -435,6 +451,7 @@ public class PlayerController implements Initializable {
         Button source = (Button) e.getSource();
 
         String selectedDirectory = String.valueOf(directoryChooser.showDialog(source.getScene().getWindow()));
+        parentPlaylistPath = selectedDirectory;
 
         if (selectedDirectory != null) {
             setPlaylistsFile(selectedDirectory);
