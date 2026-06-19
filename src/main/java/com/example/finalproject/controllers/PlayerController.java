@@ -6,6 +6,7 @@ import com.example.finalproject.data.repository.PlaylistRepo;
 import com.example.finalproject.data.repository.PlaylistSongRepo;
 import com.example.finalproject.data.repository.SongRepo;
 import com.example.finalproject.enums.PlayerMode;
+import com.example.finalproject.utility.SetupHelper;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -19,6 +20,7 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.DirectoryChooser;
@@ -55,13 +57,14 @@ public class PlayerController implements Initializable {
     private ChoiceBox<Playlist> playlistBox;
     @FXML
     private GridPane parentPane;
+    @FXML
+    private FlowPane navPane;
 
     private PlayerMode playerMode;
 
     private final HashMap<String, String> songs = new HashMap<>();
     private SongEntry selected;
     private MediaPlayer filePlayer;
-    private List<Playlist> playlists;
     private String parentPlaylistPath;
 
     //For DB playback
@@ -475,14 +478,19 @@ public class PlayerController implements Initializable {
 
             ObservableList<Playlist> list = FXCollections.observableArrayList(insertList);
 
-            playlistBox.setItems(list);
+            playlistBox.getItems().addAll(list);
         }
     }
 
     private void setPlaylistsDb() {
-        ObservableList<Playlist> list = FXCollections.observableArrayList(playlistRepo.findAll());
+        List<Playlist> tempList = new ArrayList<>();
+        tempList.add(new Playlist(null, "Choose playlist"));
+        tempList.addAll(playlistRepo.findAll());
+
+        ObservableList<Playlist> list = FXCollections.observableArrayList(tempList);
 
         playlistBox.setItems(list);
+        playlistBox.getSelectionModel().select(0);
     }
 
     private void choosePlaylist() {
@@ -491,82 +499,29 @@ public class PlayerController implements Initializable {
         if (playerMode == PlayerMode.DB) {
             updateListDb(selected.getId());
         } else if (playerMode == PlayerMode.FILE) {
-            updateListFile(selected.getName());
+            if (selected != null) {
+                updateListFile(selected.getName());
+            }
         }
     }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        playerMode = PlayerMode.FILE;
+        playerMode = PlayerMode.DB;
 
         factory = new MediaPlayerFactory();
         dbPlayer = factory.mediaPlayers().newMediaPlayer();
 
         if (playerMode == PlayerMode.FILE) {
-            playlistBox.maxWidthProperty().bind(
-                    parentPane.widthProperty()
-                            .multiply(parentPane.getColumnConstraints()
-                                    .getFirst()
-                                    .getPercentWidth() / 100.0)
-                            .multiply(0.45)
-            );
-            GridPane.setHalignment(playlistBox, HPos.RIGHT);
+            playlistBox.getItems().add(new Playlist(null, "Choose playlist"));
+            playlistBox.getSelectionModel().select(0);
 
-            Button pickerButton = new Button();
-            pickerButton.maxWidthProperty().bind(
-                    parentPane.widthProperty()
-                            .multiply(parentPane.getColumnConstraints()
-                                    .getFirst()
-                                    .getPercentWidth() / 100.0)
-                            .multiply(0.45)
-            );
-            pickerButton.setOnAction(this::choose);
-
-            parentPane.add(pickerButton, 0, 0);
-            GridPane.setHalignment(pickerButton, HPos.LEFT);
-            GridPane.setMargin(pickerButton, new Insets(5, 5, 5, 5));
+            SetupHelper.setupFile(playlistBox, parentPane).setOnAction(this::choose);
         } else if (playerMode == PlayerMode.DB) {
             setPlaylistsDb();
-
-            if (!playlistRepo.findAll().isEmpty()) {
-                updateListDb(1L);
-            }
         }
 
-        progressBar.setMin(0);
-
-        volumeBar.setMin(0);
-        volumeBar.setMax(100);
-
-        volumeBar.setValue(100);
-
-        volumeBar.setMajorTickUnit(50);
-        volumeBar.setMinorTickCount(10);
-        volumeBar.setShowTickMarks(true);
-        volumeBar.setShowTickLabels(true);
-
-        volumeBar.valueProperty().addListener((_, _, _) -> {
-            if (playerMode == PlayerMode.FILE) {
-                filePlayer.setVolume(volumeBar.getValue() * 0.01);
-            } else if (playerMode == PlayerMode.DB) {
-                if (dbPlayer != null && factory != null) {
-                    dbPlayer.audio().setVolume((int) volumeBar.getValue());
-                }
-            }
-        });
-
-        songList.setCellFactory(_ -> new ListCell<>() {
-            @Override
-            protected void updateItem(SongEntry s, boolean empty) {
-                super.updateItem(s, empty);
-                if (empty || s == null) {
-                    setText(null);
-                    setGraphic(null);
-                } else {
-                    setText(s.getName());
-                }
-            }
-        });
+        SetupHelper.generalSetup(progressBar, volumeBar, playerMode, filePlayer, dbPlayer, factory, songList);
 
         songList.getSelectionModel().selectedItemProperty().addListener((_, _, newVal) -> {
             if (newVal != null) {
