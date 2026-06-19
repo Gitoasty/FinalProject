@@ -1,6 +1,7 @@
 package com.example.finalproject;
 
 import atlantafx.base.theme.PrimerDark;
+import atlantafx.base.theme.PrimerLight;
 import com.example.finalproject.utility.NavHelper;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -29,6 +30,7 @@ public class HelloApplication extends Application {
         if (Files.notExists(dbDir)) Files.createDirectories(dbDir);
 
         Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
+        System.out.println(Application.getUserAgentStylesheet());
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("Player.fxml"));
         fxmlLoader.setControllerFactory(springContext::getBean);
 
@@ -40,5 +42,13 @@ public class HelloApplication extends Application {
         stage.setMinHeight(400);
         stage.setScene(scene);
         stage.show();
+    }
+
+    public static void toggleMode() {
+        if (Application.getUserAgentStylesheet().equals("/atlantafx/base/theme/primer-dark.css")) {
+            Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
+        } else if (Application.getUserAgentStylesheet().equals("/atlantafx/base/theme/primer-light.css")) {
+            Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
+        }
     }
 }

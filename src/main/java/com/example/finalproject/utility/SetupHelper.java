@@ -1,5 +1,6 @@
 package com.example.finalproject.utility;
 
+import com.example.finalproject.HelloApplication;
 import com.example.finalproject.data.model.Playlist;
 import com.example.finalproject.data.model.SongEntry;
 import com.example.finalproject.data.repository.PlaylistRepo;
@@ -82,14 +83,24 @@ public interface SetupHelper {
         });
 
         navPane.getChildren().add(prepareNavButton("Import"));
+        navPane.getChildren().add(prepareToggleButton());
     }
 
     static Button prepareNavButton(String destination) {
-        Button temp = new Button();
+        Button button = new Button();
 
-        temp.setText(destination);
-        temp.setOnAction(event -> NavHelper.switchScreen((Node) event.getSource()));
+        button.setText(destination);
+        button.setOnAction(event -> NavHelper.switchScreen((Node) event.getSource()));
 
-        return temp;
+        return button;
+    }
+
+    static Button prepareToggleButton() {
+        Button button = new Button();
+
+        button.setText("Light/Dark");
+        button.setOnAction(e -> HelloApplication.toggleMode());
+
+        return button;
     }
 }

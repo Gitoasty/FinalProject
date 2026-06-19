@@ -19,22 +19,16 @@ public class NavHelper {
         try {
             Button temp = (Button) clicked;
             String target = temp.getText();
-            System.out.println(target);
 
             Stage stage = (Stage) clicked.getScene().getWindow();
-            System.out.println("/com/example/finalproject/"+target+".fxml");
             FXMLLoader loader = new FXMLLoader(NavHelper.class.getResource("/com/example/finalproject/"+target+".fxml"));
             loader.setControllerFactory(context::getBean);
 
             Parent root = loader.load();
-            System.out.println("test");
             Scene scene = new Scene(root);
-            System.out.println("test2");
 
             stage.setScene(scene);
             stage.show();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception _) {}
     }
 }
