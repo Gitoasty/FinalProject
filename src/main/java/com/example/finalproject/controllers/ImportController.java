@@ -2,6 +2,8 @@ package com.example.finalproject.controllers;
 
 import com.example.finalproject.data.model.*;
 import com.example.finalproject.data.repository.*;
+import com.example.finalproject.utility.NavHelper;
+import com.example.finalproject.utility.SetupHelper;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -14,6 +16,7 @@ import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import javafx.scene.layout.FlowPane;
 
 import java.io.File;
 import java.net.URL;
@@ -29,6 +32,8 @@ public class ImportController implements Initializable {
     private Label playlistName;
     @FXML
     private ProgressBar importProgress;
+    @FXML
+    private FlowPane navPane;
 
     @Autowired
     private SongRepo songRepo;
@@ -233,6 +238,6 @@ public class ImportController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-
+        navPane.getChildren().add(SetupHelper.prepareNavButton("Player"));
     }
 }

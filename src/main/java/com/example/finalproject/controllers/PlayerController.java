@@ -16,8 +16,6 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.FlowPane;
@@ -26,6 +24,7 @@ import javafx.scene.media.MediaPlayer;
 import javafx.stage.DirectoryChooser;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
@@ -46,6 +45,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 @Component
+@RequiredArgsConstructor
 public class PlayerController implements Initializable {
     @FXML
     private Slider volumeBar, progressBar;
@@ -65,18 +65,14 @@ public class PlayerController implements Initializable {
     private final HashMap<String, String> songs = new HashMap<>();
     private SongEntry selected;
     private MediaPlayer filePlayer;
-    private String parentPlaylistPath;
 
     //For DB playback
     private List<SongRepo.SongSummary> songListDb;
     private uk.co.caprica.vlcj.player.base.MediaPlayer dbPlayer;
 
-    @Autowired
-    private SongRepo songRepo;
-    @Autowired
-    private PlaylistSongRepo playlistSongRepo;
-    @Autowired
-    private PlaylistRepo playlistRepo;
+    private final SongRepo songRepo;
+    private final PlaylistSongRepo playlistSongRepo;
+    private final PlaylistRepo playlistRepo;
     private MediaPlayerFactory factory;
     private HttpServer server;
 
@@ -454,7 +450,6 @@ public class PlayerController implements Initializable {
         Button source = (Button) e.getSource();
 
         String selectedDirectory = String.valueOf(directoryChooser.showDialog(source.getScene().getWindow()));
-        parentPlaylistPath = selectedDirectory;
 
         if (selectedDirectory != null) {
             setPlaylistsFile(selectedDirectory);
@@ -521,7 +516,7 @@ public class PlayerController implements Initializable {
             setPlaylistsDb();
         }
 
-        SetupHelper.generalSetup(progressBar, volumeBar, playerMode, filePlayer, dbPlayer, factory, songList);
+        SetupHelper.generalSetup(progressBar, volumeBar, playerMode, filePlayer, dbPlayer, factory, songList, navPane);
 
         songList.getSelectionModel().selectedItemProperty().addListener((_, _, newVal) -> {
             if (newVal != null) {

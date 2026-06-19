@@ -2,13 +2,18 @@ package com.example.finalproject.utility;
 
 import com.example.finalproject.data.model.Playlist;
 import com.example.finalproject.data.model.SongEntry;
+import com.example.finalproject.data.repository.PlaylistRepo;
 import com.example.finalproject.enums.PlayerMode;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.media.MediaPlayer;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
+
+import java.util.List;
 
 public interface SetupHelper {
     static Button setupFile(ChoiceBox<Playlist> playlistBox, GridPane parentPane) {
@@ -40,7 +45,7 @@ public interface SetupHelper {
 
     static void generalSetup(Slider progressBar, Slider volumeBar, PlayerMode playerMode,
                              MediaPlayer filePlayer, uk.co.caprica.vlcj.player.base.MediaPlayer dbPlayer,
-                             MediaPlayerFactory factory, ListView<SongEntry> songList) {
+                             MediaPlayerFactory factory, ListView<SongEntry> songList, FlowPane navPane) {
         progressBar.setMin(0);
 
         volumeBar.setMin(0);
@@ -75,5 +80,16 @@ public interface SetupHelper {
                 }
             }
         });
+
+        navPane.getChildren().add(prepareNavButton("Import"));
+    }
+
+    static Button prepareNavButton(String destination) {
+        Button temp = new Button();
+
+        temp.setText(destination);
+        temp.setOnAction(event -> NavHelper.switchScreen((Node) event.getSource()));
+
+        return temp;
     }
 }
