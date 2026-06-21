@@ -36,12 +36,26 @@ public interface SetupHelper {
                                 .getPercentWidth() / 100.0)
                         .multiply(0.45)
         );
+        pickerButton.setId("picker");
 
         parentPane.add(pickerButton, 0, 0);
         GridPane.setHalignment(pickerButton, HPos.LEFT);
         GridPane.setMargin(pickerButton, new Insets(5, 5, 5, 5));
 
         return pickerButton;
+    }
+
+    static void setupDb(ChoiceBox<Playlist> playlistBox, GridPane parentPane) {
+        playlistBox.maxWidthProperty().bind(
+                parentPane.widthProperty()
+                        .multiply(parentPane.getColumnConstraints()
+                                .getFirst()
+                                .getPercentWidth() / 100.0)
+                        .multiply(1)
+        );
+        GridPane.setHalignment(playlistBox, HPos.CENTER);
+
+        parentPane.getChildren().removeIf(node -> "picker".equals(node.getId()));
     }
 
     static void generalSetup(Slider progressBar, Slider volumeBar, PlayerMode playerMode,

@@ -60,6 +60,8 @@ public class PlayerController implements Initializable {
     private GridPane parentPane;
     @FXML
     private FlowPane navPane;
+    @FXML
+    private ToggleButton modeButton;
 
     private PlayerMode playerMode;
 
@@ -174,8 +176,10 @@ public class PlayerController implements Initializable {
     }
 
     private void stopFile() {
-        filePlayer.stop();
-        filePlayer.dispose();
+        if (filePlayer != null) {
+            filePlayer.stop();
+            filePlayer.dispose();
+        }
     }
 
     private void playDb(String songUrl) {
@@ -183,14 +187,15 @@ public class PlayerController implements Initializable {
         dbPlayer = factory.mediaPlayers().newMediaPlayer();
         dbPlayer.media().play(songUrl);
 
-
         setDbProgress();
         startDbProgressUpdater();
     }
 
     private void stopDb() {
         dbPlayer.controls().stop();
-        server.stop(0);
+        if (server != null) {
+            server.stop(0);
+        }
         stopDbProgressUpdater();
     }
 
@@ -494,12 +499,14 @@ public class PlayerController implements Initializable {
     private void choosePlaylist() {
         Playlist selected = playlistBox.getSelectionModel().getSelectedItem();
 
+        if (selected == null) {
+            return;
+        }
+
         if (playerMode == PlayerMode.DB) {
             updateListDb(selected.getId());
         } else if (playerMode == PlayerMode.FILE) {
-            if (selected != null) {
-                updateListFile(selected.getName());
-            }
+            updateListFile(selected.getName());
         }
     }
 
@@ -523,26 +530,52 @@ public class PlayerController implements Initializable {
         });
     }
 
-    @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
-        playerMode = PlayerMode.DB;
+    public void toggleMode() {
+        playlistBox.getItems().clear();
 
+        if (playerMode == PlayerMode.DB) {
+            stopDb();
+            playerMode = PlayerMode.FILE;
+
+            SetupHelper.setupFile(playlistBox, parentPane);
+
+            modeButton.setText("File mode");
+        } else if (playerMode == PlayerMode.FILE) {
+            stopFile();
+            playerMode = PlayerMode.DB;
+
+            SetupHelper.setupDb(playlistBox, parentPane);
+
+            modeButton.setText("DB mode");
+        }
+
+        selected = null;
+
+        volumeBar.valueProperty().addListener((_, _, _) -> {
+            if (playerMode == PlayerMode.FILE) {
+                filePlayer.setVolume(volumeBar.getValue() * 0.01);
+            } else if (playerMode == PlayerMode.DB) {
+                if (dbPlayer != null && factory != null) {
+                    dbPlayer.audio().setVolume((int) volumeBar.getValue());
+                }
+            }
+        });
+
+        initialSetup(playerMode);
+    }
+
+    private void initialSetup(PlayerMode mode) {
         progressBar.setStyle("-color-slider-thumb: #C951ED; -color-slider-thumb-border: #C951ED;");
         volumeBar.setStyle("-color-slider-thumb: #C951ED; -color-slider-thumb-border: #C951ED;");
 
-        factory = new MediaPlayerFactory();
-        dbPlayer = factory.mediaPlayers().newMediaPlayer();
-
-        if (playerMode == PlayerMode.FILE) {
+        if (mode == PlayerMode.FILE) {
             playlistBox.getItems().add(new Playlist(null, "Choose playlist"));
             playlistBox.getSelectionModel().select(0);
 
             SetupHelper.setupFile(playlistBox, parentPane).setOnAction(this::choose);
-        } else if (playerMode == PlayerMode.DB) {
+        } else if (mode == PlayerMode.DB) {
             setPlaylistsDb();
         }
-
-        SetupHelper.generalSetup(progressBar, volumeBar, playerMode, filePlayer, dbPlayer, factory, songList, navPane);
 
         songList.getSelectionModel().selectedItemProperty().addListener((_, _, newVal) -> {
             if (newVal != null) {
@@ -562,5 +595,17 @@ public class PlayerController implements Initializable {
             }
         });
         playlistBox.setOnAction(_ -> choosePlaylist());
+    }
+
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        playerMode = PlayerMode.DB;
+
+        factory = new MediaPlayerFactory();
+        dbPlayer = factory.mediaPlayers().newMediaPlayer();
+
+        SetupHelper.generalSetup(progressBar, volumeBar, playerMode, filePlayer, dbPlayer, factory, songList, navPane);
+
+        initialSetup(playerMode);
     }
 }
