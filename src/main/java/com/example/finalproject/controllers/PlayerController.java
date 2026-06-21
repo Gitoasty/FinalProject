@@ -84,6 +84,8 @@ public class PlayerController implements Initializable {
     private ScheduledFuture<?> progressUpdater;
     private volatile boolean seekingByUser = false;
 
+    private boolean songListened = false;
+
     public void updateListFile(String songFolderPathString) {
         songList.getItems().clear();
 
@@ -385,6 +387,8 @@ public class PlayerController implements Initializable {
     private void selectSong(SongEntry songEntry) {
         songTitle.setText(songEntry.getName());
 
+        songListened = false;
+
         if (playerMode == PlayerMode.FILE) {
             if (selected != null) {
                 stopFile();
@@ -422,6 +426,16 @@ public class PlayerController implements Initializable {
         progressUpdater = scheduler.scheduleAtFixedRate(() -> {
             double length = dbPlayer.media().info().duration() / 1000.0;
             double posSeconds = dbPlayer.status().time() / 1000.0;
+
+            if (posSeconds > 30 && !songListened) {
+                Platform.runLater(() -> {
+                    Long plays = songRepo.findPlaysById(selected.getId());
+                    plays++;
+                    songRepo.updatePlays(selected.getId(), plays);
+                });
+
+                songListened = true;
+            }
 
             Platform.runLater(() -> {
                 double timeSec = Double.parseDouble(String.valueOf(posSeconds));

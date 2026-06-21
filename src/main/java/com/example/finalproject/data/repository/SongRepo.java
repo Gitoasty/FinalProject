@@ -2,7 +2,9 @@ package com.example.finalproject.data.repository;
 
 
 import com.example.finalproject.data.model.Song;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -17,11 +19,18 @@ public interface SongRepo extends JpaRepository<Song, Long> {
         String getName();
         Long getArtistId();
     }
+
     List<SongSummary> findByIdIn(List<Long> ids);
     List<SongSummary> findAllProjectedBy();
 
     @Query(value = "SELECT s.data FROM Song s WHERE s.id = :id")
     byte[] findDataById(@Param("id") Long id);
 
-    Long findLengthById(Long songId);
+    @Query(value = "SELECT s.plays FROM Song s WHERE s.id = :id")
+    Long findPlaysById(Long id);
+
+    @Modifying
+    @Query("UPDATE Song s SET s.plays = :value WHERE s.id = :id")
+    @Transactional
+    void updatePlays(@Param("id") Long id, @Param("value") Long value);
 }
