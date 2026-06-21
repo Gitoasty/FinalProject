@@ -10,10 +10,12 @@ import lombok.Setter;
 @AllArgsConstructor
 public class SongEntry {
     private Long id;
+    private Long length;
     private String name;
 
     public SongEntry(SongRepo.SongSummary s) {
         this.id = s.getId();
+        this.length = s.getLength();
         this.name = s.getName();
     }
 

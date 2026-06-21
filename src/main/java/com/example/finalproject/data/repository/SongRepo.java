@@ -13,13 +13,15 @@ import java.util.List;
 public interface SongRepo extends JpaRepository<Song, Long> {
     interface SongSummary {
         Long getId();
+        Long getLength();
         String getName();
         Long getArtistId();
     }
     List<SongSummary> findByIdIn(List<Long> ids);
-
     List<SongSummary> findAllProjectedBy();
 
     @Query(value = "SELECT s.data FROM Song s WHERE s.id = :id")
     byte[] findDataById(@Param("id") Long id);
+
+    Long findLengthById(Long songId);
 }

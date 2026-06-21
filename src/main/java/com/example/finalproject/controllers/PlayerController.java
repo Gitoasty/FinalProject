@@ -51,7 +51,7 @@ public class PlayerController implements Initializable {
     @FXML
     private Slider volumeBar, progressBar;
     @FXML
-    private Label songTitle;
+    private Label songTitle, currentTime, totalTime;
     @FXML
     private ListView<SongEntry> songList;
     @FXML
@@ -97,7 +97,7 @@ public class PlayerController implements Initializable {
                 String[] tempArray = song.getName().split("\\.");
                 String name = Arrays.toString(Arrays.copyOf(tempArray, tempArray.length - 1)).replace("[", "").replace("]", "");
                 songs.put(name, song.getAbsolutePath());
-                songList.getItems().add(new SongEntry((long) index, name));
+                songList.getItems().add(new SongEntry((long) index, null, name));
 
                 index++;
             }
@@ -124,6 +124,14 @@ public class PlayerController implements Initializable {
         filePlayer.currentTimeProperty().addListener((_, _, newTime) -> {
             if (!progressBar.isValueChanging()) {
                 progressBar.setValue(newTime.toSeconds());
+
+                Platform.runLater(() -> {
+                    double timeSec = Double.parseDouble(newTime.toString().replace(" ms", ""));
+                    int timeRound = Math.toIntExact(Math.round(timeSec / 1000));
+
+                    String timeActual = String.format("%02d:%02d", timeRound/60, timeRound%60);
+                    currentTime.setText(timeActual);
+                });
             }
         });
         filePlayer.setVolume(volumeBar.getValue() * 0.01);
@@ -156,6 +164,13 @@ public class PlayerController implements Initializable {
         } else {
             filePlayer.setOnReady(() -> {
                 Duration total = filePlayer.getTotalDuration();
+
+                double timeSec = Double.parseDouble(total.toString().replace(" ms", ""));
+                int timeRound = Math.toIntExact(Math.round(timeSec / 1000));
+
+                String timeActual = String.format("%02d:%02d", timeRound/60, timeRound%60);
+                totalTime.setText(timeActual);
+
                 progressBar.setMax(total.toSeconds());
                 progressBar.setValue(0);
             });
@@ -298,7 +313,6 @@ public class PlayerController implements Initializable {
                 stopDb();
 
                 server = null;
-                System.out.println("Stopped serving");
             }
 
             server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
@@ -309,7 +323,6 @@ public class PlayerController implements Initializable {
 
             int port = server.getAddress().getPort();
             String url = "http://127.0.0.1:" + port + path;
-            System.out.println("Serving blob at: " + url);
 
             System.setProperty(
                     "jna.library.path",
@@ -371,7 +384,6 @@ public class PlayerController implements Initializable {
 
     private void selectSong(SongEntry songEntry) {
         songTitle.setText(songEntry.getName());
-        System.out.println("Selected: " + songEntry);
 
         if (playerMode == PlayerMode.FILE) {
             if (selected != null) {
@@ -385,10 +397,13 @@ public class PlayerController implements Initializable {
             if (!songListDb.stream().map(SongRepo.SongSummary::getId).toList().contains(songEntry.getId())) return;
 
             selected = songEntry;
+
+            Long time = selected.getLength();
+            String timeActual = String.format("%02d:%02d", time/60, time%60);
+
+            totalTime.setText(timeActual);
             String songUrl = setSongDb(songEntry.getId());
-            System.out.println("working up to here");
             if (!songUrl.isEmpty()) {
-                System.out.println("song url is: " + songUrl);
                 playDb(songUrl);
             }
         }
@@ -407,6 +422,14 @@ public class PlayerController implements Initializable {
         progressUpdater = scheduler.scheduleAtFixedRate(() -> {
             double length = dbPlayer.media().info().duration() / 1000.0;
             double posSeconds = dbPlayer.status().time() / 1000.0;
+
+            Platform.runLater(() -> {
+                double timeSec = Double.parseDouble(String.valueOf(posSeconds));
+                int timeRound = Math.toIntExact(Math.round(timeSec));
+
+                String timeActual = String.format("%02d:%02d", timeRound/60, timeRound%60);
+                currentTime.setText(timeActual);
+            });
 
             Platform.runLater(() -> {
                 if (length > 2 && (length - posSeconds < 1)) {
