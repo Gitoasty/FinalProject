@@ -11,6 +11,7 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -19,13 +20,13 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.DirectoryChooser;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 
@@ -402,7 +403,7 @@ public class PlayerController implements Initializable {
             double length = dbPlayer.media().info().duration() / 1000.0;
             double posSeconds = dbPlayer.status().time() / 1000.0;
 
-            javafx.application.Platform.runLater(() -> {
+            Platform.runLater(() -> {
                 if (length > 2 && (length - posSeconds < 1)) {
                     nextSong();
                 }
@@ -413,6 +414,8 @@ public class PlayerController implements Initializable {
                 if (!seekingByUser) {
                     progressBar.setValue(posSeconds);
                 }
+
+                progressCss();
             });
         }, 0, 50, TimeUnit.MILLISECONDS);
     }
@@ -500,9 +503,32 @@ public class PlayerController implements Initializable {
         }
     }
 
+    private void progressCss() {
+        double progressPercentage = (progressBar.getValue() - progressBar.getMin())
+                / (progressBar.getMax() - progressBar.getMin()) * 100;
+
+        Platform.runLater(() -> {
+            StackPane track = (StackPane) progressBar.lookup(".track");
+            if (track != null) {
+                track.setStyle(
+                        String.format(
+                                "-fx-padding: 4 0 4 0;" +
+                                "-fx-background-radius: 5px;" +
+                                "-fx-background-color: linear-gradient(to right, " +
+                                        "purple 0%%, purple %1$.1f%%, lightgray %1$.1f%%, lightgray 100%%);",
+                                progressPercentage
+                        )
+                );
+            }
+        });
+    }
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         playerMode = PlayerMode.DB;
+
+        progressBar.setStyle("-color-slider-thumb: #C951ED; -color-slider-thumb-border: #C951ED;");
+        volumeBar.setStyle("-color-slider-thumb: #C951ED; -color-slider-thumb-border: #C951ED;");
 
         factory = new MediaPlayerFactory();
         dbPlayer = factory.mediaPlayers().newMediaPlayer();
