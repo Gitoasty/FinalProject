@@ -140,8 +140,14 @@ public class PlayerController implements Initializable {
 
         filePlayer.setOnEndOfMedia(this::nextSong);
 
-        progressBar.setOnMousePressed(_ -> filePlayer.seek(Duration.seconds(progressBar.getValue())));
-        progressBar.setOnMouseDragged(_ -> filePlayer.seek(Duration.seconds(progressBar.getValue())));
+        progressBar.setOnMousePressed(_ -> {
+            filePlayer.seek(Duration.seconds(progressBar.getValue()));
+            progressCss();
+        });
+        progressBar.setOnMouseDragged(_ -> {
+            filePlayer.seek(Duration.seconds(progressBar.getValue()));
+            progressCss();
+        });
     }
 
     private String setSongDb(Long songId) {
@@ -474,17 +480,22 @@ public class PlayerController implements Initializable {
             seekingByUser = true;
             double targetSec = progressBar.getValue();
             dbPlayer.controls().setTime((long)(targetSec * 1000));
+            progressCss();
         });
 
         progressBar.setOnMouseReleased(_ -> {
             double targetSec = progressBar.getValue();
             dbPlayer.controls().setTime((long)(targetSec * 1000));
+            progressCss();
             seekingByUser = false;
         });
 
         progressBar.setOnMouseDragged(_ -> {
             double targetSec = progressBar.getValue();
-            if (seekingByUser) dbPlayer.controls().setTime((long)(targetSec * 1000));
+            if (seekingByUser) {
+                dbPlayer.controls().setTime((long)(targetSec * 1000));
+                progressCss();
+            }
         });
     }
 
@@ -636,7 +647,7 @@ public class PlayerController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        playerMode = PlayerMode.DB;
+        playerMode = PlayerMode.FILE;
 
         if (SetupHelper.isLinux() || new NativeDiscovery().discover()) {
             factory = new MediaPlayerFactory();
