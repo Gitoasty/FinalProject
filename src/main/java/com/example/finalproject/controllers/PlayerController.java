@@ -29,6 +29,7 @@ import javafx.util.StringConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
+import uk.co.caprica.vlcj.factory.discovery.NativeDiscovery;
 
 import java.io.File;
 import java.io.IOException;
@@ -107,7 +108,6 @@ public class PlayerController implements Initializable {
     }
 
     public void updateListDb(Long id) {
-        System.out.println("Received id: " + id);
         songListDb = songRepo.findByIdIn(playlistSongRepo.findSongIdsByPlaylistId(id));
 
         songs.clear();
@@ -589,7 +589,7 @@ public class PlayerController implements Initializable {
         selected = null;
 
         volumeBar.valueProperty().addListener((_, _, _) -> {
-            if (playerMode == PlayerMode.FILE) {
+            if (playerMode == PlayerMode.FILE && filePlayer != null) {
                 filePlayer.setVolume(volumeBar.getValue() * 0.01);
             } else if (playerMode == PlayerMode.DB) {
                 if (dbPlayer != null && factory != null) {
@@ -638,8 +638,27 @@ public class PlayerController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         playerMode = PlayerMode.DB;
 
-        factory = new MediaPlayerFactory();
-        dbPlayer = factory.mediaPlayers().newMediaPlayer();
+        if (SetupHelper.isLinux() || new NativeDiscovery().discover()) {
+            factory = new MediaPlayerFactory();
+            dbPlayer = factory.mediaPlayers().newMediaPlayer();
+        } else {
+            playerMode = PlayerMode.FILE;
+            modeButton.setDisable(true);
+            modeButton.setText("File mode only");
+
+            dbPlayer = null;
+            factory = null;
+        }
+
+        volumeBar.valueProperty().addListener((_, _, _) -> {
+            if (playerMode == PlayerMode.FILE && filePlayer != null) {
+                filePlayer.setVolume(volumeBar.getValue() * 0.01);
+            } else if (playerMode == PlayerMode.DB) {
+                if (dbPlayer != null && factory != null) {
+                    dbPlayer.audio().setVolume((int) volumeBar.getValue());
+                }
+            }
+        });
 
         SetupHelper.generalSetup(progressBar, volumeBar, playerMode, filePlayer, dbPlayer, factory, songList, navPane);
 

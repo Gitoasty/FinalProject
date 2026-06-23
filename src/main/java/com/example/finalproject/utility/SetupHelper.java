@@ -73,16 +73,6 @@ public interface SetupHelper {
         volumeBar.setShowTickMarks(true);
         volumeBar.setShowTickLabels(true);
 
-        volumeBar.valueProperty().addListener((_, _, _) -> {
-            if (playerMode == PlayerMode.FILE) {
-                filePlayer.setVolume(volumeBar.getValue() * 0.01);
-            } else if (playerMode == PlayerMode.DB) {
-                if (dbPlayer != null && factory != null) {
-                    dbPlayer.audio().setVolume((int) volumeBar.getValue());
-                }
-            }
-        });
-
         songList.setCellFactory(_ -> new ListCell<>() {
             @Override
             protected void updateItem(SongEntry s, boolean empty) {
@@ -116,5 +106,10 @@ public interface SetupHelper {
         button.setOnAction(e -> HelloApplication.toggleMode());
 
         return button;
+    }
+
+    static boolean isLinux() {
+        String os = System.getProperty("os.name").toLowerCase();
+        return os.contains("linux");
     }
 }
