@@ -126,6 +126,7 @@ public class PlayerController implements Initializable {
         filePlayer.currentTimeProperty().addListener((_, _, newTime) -> {
             if (!progressBar.isValueChanging()) {
                 progressBar.setValue(newTime.toSeconds());
+                progressCss(false);
 
                 Platform.runLater(() -> {
                     double timeSec = Double.parseDouble(newTime.toString().replace(" ms", ""));
@@ -142,15 +143,14 @@ public class PlayerController implements Initializable {
 
         progressBar.setOnMousePressed(_ -> {
             filePlayer.seek(Duration.seconds(progressBar.getValue()));
-            progressCss();
+            progressCss(false);
         });
         progressBar.setOnMouseDragged(_ -> {
-            filePlayer.seek(Duration.seconds(progressBar.getValue()));
-            progressCss();
+            progressCss(false);
         });
         progressBar.setOnMouseReleased(_ -> {
             filePlayer.seek(Duration.seconds(progressBar.getValue()));
-            progressCss();
+            progressCss(false);
         });
     }
 
@@ -421,6 +421,8 @@ public class PlayerController implements Initializable {
                 playDb(songUrl);
             }
         }
+
+        progressCss(true);
     }
 
     private void startDbProgressUpdater() {
@@ -467,7 +469,7 @@ public class PlayerController implements Initializable {
                     progressBar.setValue(posSeconds);
                 }
 
-                progressCss();
+                progressCss(false);
             });
         }, 0, 50, TimeUnit.MILLISECONDS);
     }
@@ -484,13 +486,13 @@ public class PlayerController implements Initializable {
             seekingByUser = true;
             double targetSec = progressBar.getValue();
             dbPlayer.controls().setTime((long)(targetSec * 1000));
-            progressCss();
+            progressCss(false);
         });
 
         progressBar.setOnMouseReleased(_ -> {
             double targetSec = progressBar.getValue();
             dbPlayer.controls().setTime((long)(targetSec * 1000));
-            progressCss();
+            progressCss(false);
             seekingByUser = false;
         });
 
@@ -498,7 +500,7 @@ public class PlayerController implements Initializable {
             double targetSec = progressBar.getValue();
             if (seekingByUser) {
                 dbPlayer.controls().setTime((long)(targetSec * 1000));
-                progressCss();
+                progressCss(false);
             }
         });
     }
@@ -562,8 +564,14 @@ public class PlayerController implements Initializable {
         }
     }
 
-    private void progressCss() {
-        double progressPercentage = (progressBar.getValue() - progressBar.getMin())
+    private void progressCss(boolean reset) {
+        double time = 0;
+
+        if (!reset) {
+            time = progressBar.getValue();
+        }
+
+        double progressPercentage = (time - progressBar.getMin())
                 / (progressBar.getMax() - progressBar.getMin()) * 100;
 
         Platform.runLater(() -> {
@@ -617,6 +625,7 @@ public class PlayerController implements Initializable {
     }
 
     private void initialSetup(PlayerMode mode) {
+        progressBar.setStyle("-fx-padding: 10px 0;");
         progressBar.setStyle("-color-slider-thumb: #C951ED; -color-slider-thumb-border: #C951ED;");
         volumeBar.setStyle("-color-slider-thumb: #C951ED; -color-slider-thumb-border: #C951ED;");
 
@@ -675,7 +684,7 @@ public class PlayerController implements Initializable {
             }
         });
 
-        SetupHelper.generalSetup(progressBar, volumeBar, playerMode, filePlayer, dbPlayer, factory, songList, navPane);
+        SetupHelper.generalSetup(progressBar, volumeBar, songList, navPane);
 
         initialSetup(playerMode);
     }
