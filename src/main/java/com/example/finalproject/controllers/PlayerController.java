@@ -148,6 +148,10 @@ public class PlayerController implements Initializable {
             filePlayer.seek(Duration.seconds(progressBar.getValue()));
             progressCss();
         });
+        progressBar.setOnMouseReleased(_ -> {
+            filePlayer.seek(Duration.seconds(progressBar.getValue()));
+            progressCss();
+        });
     }
 
     private String setSongDb(Long songId) {
