@@ -18,6 +18,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
@@ -27,10 +29,15 @@ import javafx.stage.DirectoryChooser;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
 import lombok.RequiredArgsConstructor;
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.datatype.Artwork;
 import org.springframework.stereotype.Component;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 import uk.co.caprica.vlcj.factory.discovery.NativeDiscovery;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -63,6 +70,10 @@ public class PlayerController implements Initializable {
     private FlowPane navPane;
     @FXML
     private ToggleButton modeButton;
+    @FXML
+    private StackPane centerPane;
+    @FXML
+    private ImageView coverArt;
 
     private PlayerMode playerMode;
 
@@ -120,8 +131,24 @@ public class PlayerController implements Initializable {
     }
 
     private void setSongFile() {
-        Media media = new Media(new File(songs.get(selected.getName())).toURI().toString());
+        File songFile = new File(songs.get(selected.getName()));
+        String songFileString = songFile.toURI().toString();
+        Media media = new Media(songFileString);
         filePlayer = new MediaPlayer(media);
+
+        try {
+            AudioFile audioFile = AudioFileIO.read(songFile);
+            Tag tag = audioFile.getTag();
+            Artwork cover = tag.getFirstArtwork();
+
+            if (cover != null) {
+                byte[] image = cover.getBinaryData();
+                ByteArrayInputStream bis = new ByteArrayInputStream(image);
+
+                SetupHelper.setCoverArt(bis, coverArt, centerPane);
+            }
+        } catch (Exception _) {}
+
 
         filePlayer.currentTimeProperty().addListener((_, _, newTime) -> {
             if (!progressBar.isValueChanging()) {
@@ -159,6 +186,24 @@ public class PlayerController implements Initializable {
         Platform.runLater(() -> {
             playsLabel.setText("Plays: " + songRepo.findPlaysById(songId).toString());
         });
+
+        try {
+            File temp = File.createTempFile("song", ".mp3");
+            Files.write(temp.toPath(), songData);
+
+            AudioFile audioFile = AudioFileIO.read(temp);
+            Tag tag = audioFile.getTag();
+            Artwork cover = tag.getFirstArtwork();
+
+            if (cover != null) {
+                byte[] image = cover.getBinaryData();
+                ByteArrayInputStream bis = new ByteArrayInputStream(image);
+
+                SetupHelper.setCoverArt(bis, coverArt, centerPane);
+            }
+
+            temp.delete();
+        } catch (Exception _) {}
 
         return serveSong(songData);
     }
@@ -612,6 +657,8 @@ public class PlayerController implements Initializable {
             modeButton.setText("DB mode");
         }
 
+        coverArt.setImage(null);
+        songTitle.setText("Song title");
         selected = null;
 
         volumeBar.valueProperty().addListener((_, _, _) -> {
@@ -690,5 +737,7 @@ public class PlayerController implements Initializable {
         SetupHelper.generalSetup(progressBar, volumeBar, songList, navPane);
 
         initialSetup(playerMode);
+
+        if (playerMode == PlayerMode.FILE) playsLabel.setVisible(false);
     }
 }

@@ -3,12 +3,23 @@ package com.example.finalproject.utility;
 import com.example.finalproject.HelloApplication;
 import com.example.finalproject.data.model.Playlist;
 import com.example.finalproject.data.model.SongEntry;
+import javafx.application.Platform;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.datatype.Artwork;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
 
 public interface SetupHelper {
     static Button setupFile(ChoiceBox<Playlist> playlistBox, GridPane parentPane) {
@@ -104,5 +115,16 @@ public interface SetupHelper {
     static boolean isLinux() {
         String os = System.getProperty("os.name").toLowerCase();
         return os.contains("linux");
+    }
+
+    static void setCoverArt(ByteArrayInputStream bis, ImageView coverArt, StackPane centerPane) {
+        Image coverImage = new Image(bis);
+
+        Platform.runLater(() -> {
+            coverArt.setImage(coverImage);
+
+            coverArt.fitWidthProperty().bind(centerPane.widthProperty());
+            coverArt.fitHeightProperty().bind(centerPane.heightProperty());
+        });
     }
 }
