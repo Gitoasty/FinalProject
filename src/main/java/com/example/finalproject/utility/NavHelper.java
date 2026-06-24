@@ -9,8 +9,6 @@ import javafx.stage.Stage;
 import lombok.Setter;
 import org.springframework.context.ApplicationContext;
 
-import java.util.Objects;
-
 public class NavHelper {
     @Setter
     private static ApplicationContext context = null;

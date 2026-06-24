@@ -52,7 +52,7 @@ public class PlayerController implements Initializable {
     @FXML
     private Slider volumeBar, progressBar;
     @FXML
-    private Label songTitle, currentTime, totalTime;
+    private Label songTitle, currentTime, totalTime, playsLabel;
     @FXML
     private ListView<SongEntry> songList;
     @FXML
@@ -156,6 +156,9 @@ public class PlayerController implements Initializable {
 
     private String setSongDb(Long songId) {
         byte[] songData = songRepo.findDataById(songId);
+        Platform.runLater(() -> {
+            playsLabel.setText("Plays: " + songRepo.findPlaysById(songId).toString());
+        });
 
         return serveSong(songData);
     }
@@ -660,7 +663,7 @@ public class PlayerController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        playerMode = PlayerMode.FILE;
+        playerMode = PlayerMode.DB;
 
         if (SetupHelper.isLinux() || new NativeDiscovery().discover()) {
             factory = new MediaPlayerFactory();
