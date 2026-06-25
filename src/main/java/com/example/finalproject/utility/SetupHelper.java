@@ -91,6 +91,7 @@ public interface SetupHelper {
         });
 
         navPane.getChildren().add(prepareNavButton("Import"));
+        navPane.getChildren().add(prepareNavButton("EditSongs"));
         navPane.getChildren().add(prepareToggleButton());
     }
 
