@@ -2,6 +2,7 @@ package com.example.finalproject.controllers;
 
 import com.example.finalproject.data.model.*;
 import com.example.finalproject.data.repository.*;
+import com.example.finalproject.utility.SetupHelper;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -85,7 +86,7 @@ public class ImportController implements Initializable {
             importProgress.setMax(songs.length);
             importProgress.setValue(0);
 
-            done.setText("");
+            done.setText("Processing...");
         });
         startProgressUpdater();
 
@@ -124,7 +125,6 @@ public class ImportController implements Initializable {
             String artist = null;
             String album = null;
             String year = null;
-
 
             try {
                 try {
@@ -320,5 +320,9 @@ public class ImportController implements Initializable {
                 thumb.setStyle("-fx-background-color: transparent; -fx-padding: 0;");
             }
         });
+
+        navPane.getChildren().add(SetupHelper.prepareNavButton("Player"));
+
+        navPane.getChildren().add(SetupHelper.prepareToggleButton());
     }
 }
