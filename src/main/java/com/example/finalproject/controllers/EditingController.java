@@ -41,6 +41,7 @@ public class EditingController implements Initializable {
 
         navPane.getChildren().add(SetupHelper.prepareNavButton("Import"));
         navPane.getChildren().add(SetupHelper.prepareNavButton("Player"));
+        navPane.getChildren().add(SetupHelper.prepareNavButton("Additions"));
         navPane.getChildren().add(SetupHelper.prepareToggleButton());
     }
 }

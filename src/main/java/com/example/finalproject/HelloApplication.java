@@ -31,7 +31,7 @@ public class HelloApplication extends Application {
 
         Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
         System.out.println(Application.getUserAgentStylesheet());
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("EditSongs.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("Player.fxml"));
         fxmlLoader.setControllerFactory(springContext::getBean);
 
         stage.setOnCloseRequest(_ -> System.exit(0));

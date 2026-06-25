@@ -27,6 +27,6 @@ public class NavHelper {
 
             stage.setScene(scene);
             stage.show();
-        } catch (Exception _) {}
+        } catch (Exception e) {e.printStackTrace();}
     }
 }
