@@ -155,7 +155,16 @@ public class EditingController implements Initializable {
     public void deleteSong() {
         playlistSongRepo.deleteBySongId(table.getSelectionModel().getSelectedItem().getId());
         songRepo.deleteById(table.getSelectionModel().getSelectedItem().getId());
+
         reloadTable();
+
+        idLabel.setText("Song id: ");
+        nameField.setText("");
+        artistBox.getSelectionModel().select(0);
+        albumBox.getSelectionModel().select(0);
+        yearField.setText("");
+        noteField.setText("");
+        likedToggle.setSelected(false);
     }
 
     @Override
