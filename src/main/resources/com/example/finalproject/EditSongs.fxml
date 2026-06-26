@@ -59,7 +59,7 @@
               </rowConstraints>
                <children>
                   <Label fx:id="idLabel" text="Selected id:" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
-                  <TextField fx:id="songField" promptText="Song name" GridPane.rowIndex="1">
+                  <TextField fx:id="nameField" promptText="Song name" GridPane.rowIndex="1">
                      <opaqueInsets>
                         <Insets />
                      </opaqueInsets>
@@ -83,12 +83,12 @@
                         <Insets left="15.0" right="15.0" />
                      </GridPane.margin>
                   </TextField>
-                  <Button mnemonicParsing="false" text="Edit" GridPane.halignment="LEFT" GridPane.rowIndex="7" GridPane.valignment="CENTER">
+                  <Button mnemonicParsing="false" onAction="#updateSong" text="Edit" GridPane.halignment="LEFT" GridPane.rowIndex="7" GridPane.valignment="CENTER">
                      <GridPane.margin>
                         <Insets left="50.0" />
                      </GridPane.margin>
                   </Button>
-                  <Button layoutX="10.0" layoutY="41.0" mnemonicParsing="false" text="Delete" GridPane.halignment="RIGHT" GridPane.rowIndex="7" GridPane.valignment="CENTER">
+                  <Button layoutX="10.0" layoutY="41.0" mnemonicParsing="false" onAction="#deleteSong" text="Delete" GridPane.halignment="RIGHT" GridPane.rowIndex="7" GridPane.valignment="CENTER">
                      <GridPane.margin>
                         <Insets right="50.0" />
                      </GridPane.margin>
