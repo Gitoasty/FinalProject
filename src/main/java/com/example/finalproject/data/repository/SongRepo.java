@@ -3,6 +3,7 @@ package com.example.finalproject.data.repository;
 
 import com.example.finalproject.data.model.Song;
 import jakarta.transaction.Transactional;
+import javafx.beans.value.ObservableValue;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,6 +20,20 @@ public interface SongRepo extends JpaRepository<Song, Long> {
         String getName();
         Long getArtistId();
     }
+
+    interface SongInfo {
+        Long getId();
+        String getName();
+        Long getArtistId();
+        Long getAlbumId();
+        Long getLength();
+        Long getPlays();
+        String getReleaseYear();
+        String getNote();
+        Boolean getLiked();
+    }
+
+    List<SongInfo> findAllSongInfoProjectedBy();
 
     List<SongSummary> findByIdIn(List<Long> ids);
     List<SongSummary> findAllProjectedBy();
