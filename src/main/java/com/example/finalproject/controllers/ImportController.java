@@ -9,6 +9,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.StackPane;
 import javafx.stage.DirectoryChooser;
 import org.jaudiotagger.audio.AudioFile;
@@ -26,6 +27,7 @@ import java.text.Normalizer;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Component
 public class ImportController implements Initializable {
@@ -39,6 +41,8 @@ public class ImportController implements Initializable {
     private FlowPane navPane;
     @FXML
     private Label done;
+    @FXML
+    private TextArea logOutput;
 
     @Autowired
     private SongRepo songRepo;
@@ -108,9 +112,13 @@ public class ImportController implements Initializable {
         int batchSize = 50;
         List<PlaylistSong> linkBatch = new ArrayList<>(batchSize);
 
+        List<String> errorLog = new ArrayList<>();
+        errorLog.add("Songs that were not imported: ");
+
         for (File song : songs) {
             if (song.length() < 1000L) {
-                System.out.println("File is corrupted or empty - " + song.getName());
+                errorLog.add("File is corrupted or empty: " + song.getName());
+
                 progress.incrementAndGet();
 
                 continue;
@@ -245,8 +253,7 @@ public class ImportController implements Initializable {
                 }
 
             } catch (Exception e) {
-                e.printStackTrace();
-                System.out.println("This is the problem one-" + song.getName());
+                errorLog.add("Unknown error: " + song.getName());
             }
 
             progress.incrementAndGet();
@@ -260,6 +267,12 @@ public class ImportController implements Initializable {
         Platform.runLater(() -> {
             importProgress.setValue(songs.length);
             done.setText("Import gotov!");
+
+            if (errorLog.size() > 1) {
+                String log = errorLog.stream().collect(Collectors.joining("\n"));
+
+                logOutput.setText(log);
+            }
         });
 
         Platform.runLater(this::progressCss);
