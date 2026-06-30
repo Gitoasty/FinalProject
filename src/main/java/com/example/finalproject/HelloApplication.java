@@ -6,6 +6,7 @@ import com.example.finalproject.utility.NavHelper;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -13,6 +14,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public class HelloApplication extends Application {
     private ConfigurableApplicationContext springContext;
@@ -37,7 +39,12 @@ public class HelloApplication extends Application {
         stage.setOnCloseRequest(_ -> System.exit(0));
 
         Scene scene = new Scene(fxmlLoader.load(), 1280, 720);
-        stage.setTitle("FinalProject");
+        stage.setTitle("Heart Of Music");
+
+        Image icon = new Image(Objects.requireNonNull(
+                HelloApplication.class.getResourceAsStream("/images/heartOfMusic.png")));
+        stage.getIcons().add(icon);
+
         stage.setMinWidth(750);
         stage.setMinHeight(400);
         stage.setScene(scene);

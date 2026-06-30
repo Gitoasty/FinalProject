@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.FlowPane?>
@@ -10,6 +11,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.text.Font?>
 
 <StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/25.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.finalproject.controllers.AdditionController">
    <children>
@@ -29,12 +31,14 @@
                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
               </columnConstraints>
               <rowConstraints>
+                  <RowConstraints minHeight="10.0" percentHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <Button mnemonicParsing="false" onAction="#addArtist" text="Add Artist" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
-                  <TextField fx:id="artistField" promptText="Artist name" GridPane.halignment="CENTER" GridPane.valignment="BOTTOM">
+                  <Button mnemonicParsing="false" onAction="#addArtist" text="Add Artist" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
+                  <TextField fx:id="artistField" promptText="Artist name" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="BOTTOM">
                      <opaqueInsets>
                         <Insets />
                      </opaqueInsets>
@@ -42,7 +46,12 @@
                         <Insets left="50.0" right="50.0" />
                      </GridPane.margin>
                   </TextField>
-                  <Rectangle fx:id="artistIndicator" arcHeight="5.0" arcWidth="5.0" fill="#15ff00" height="50.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" visible="false" width="50.0" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="BOTTOM" />
+                  <Rectangle fx:id="artistIndicator" arcHeight="5.0" arcWidth="5.0" fill="#15ff00" height="50.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" visible="false" width="50.0" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="BOTTOM" />
+                  <Label text="Artists" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                     <font>
+                        <Font size="25.0" />
+                     </font>
+                  </Label>
                </children>
             </GridPane>
             <GridPane layoutX="10.0" layoutY="46.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
@@ -50,19 +59,25 @@
                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                </columnConstraints>
                <rowConstraints>
+                  <RowConstraints minHeight="10.0" percentHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                </rowConstraints>
                <children>
-                  <Button mnemonicParsing="false" onAction="#addAlbum" text="Add Album" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="TOP" />
-                  <TextField fx:id="albumField" promptText="Album name" GridPane.halignment="CENTER" GridPane.valignment="BOTTOM">
+                  <Button mnemonicParsing="false" onAction="#addAlbum" text="Add Album" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
+                  <TextField fx:id="albumField" promptText="Album name" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="BOTTOM">
                      <GridPane.margin>
                         <Insets left="50.0" right="50.0" />
                      </GridPane.margin>
                   </TextField>
-                  <ChoiceBox fx:id="artistBox" prefWidth="150.0" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
-                  <Rectangle fx:id="albumIndicator" arcHeight="5.0" arcWidth="5.0" fill="#15ff00" height="50.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" visible="false" width="50.0" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="BOTTOM" />
+                  <ChoiceBox fx:id="artistBox" prefWidth="150.0" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
+                  <Rectangle fx:id="albumIndicator" arcHeight="5.0" arcWidth="5.0" fill="#15ff00" height="50.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" visible="false" width="50.0" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="BOTTOM" />
+                  <Label text="Albums" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                     <font>
+                        <Font size="25.0" />
+                     </font>
+                  </Label>
                </children>
             </GridPane>
             <FlowPane fx:id="navPane" alignment="CENTER" columnHalignment="CENTER" prefHeight="200.0" prefWidth="200.0" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
