@@ -1,6 +1,7 @@
 package com.example.finalproject.utility;
 
 import com.example.finalproject.HelloApplication;
+import com.example.finalproject.controllers.PlayerController;
 import com.example.finalproject.data.model.Playlist;
 import com.example.finalproject.data.model.SongEntry;
 import javafx.application.Platform;
@@ -63,7 +64,7 @@ public interface SetupHelper {
         parentPane.getChildren().removeIf(node -> "picker".equals(node.getId()));
     }
 
-    static void generalSetup(Slider progressBar, Slider volumeBar,
+    static void generalSetup(Object controller, Slider progressBar, Slider volumeBar,
                              ListView<SongEntry> songList, FlowPane navPane) {
         progressBar.setMin(0);
 
@@ -90,17 +91,29 @@ public interface SetupHelper {
             }
         });
 
-        navPane.getChildren().add(prepareNavButton("Import"));
-        navPane.getChildren().add(prepareNavButton("EditSongs"));
-        navPane.getChildren().add(SetupHelper.prepareNavButton("Additions"));
+        navPane.getChildren().add(prepareNavButton(controller, "Import"));
+        navPane.getChildren().add(prepareNavButton(controller, "EditSongs"));
+        navPane.getChildren().add(SetupHelper.prepareNavButton(controller, "Additions"));
         navPane.getChildren().add(prepareToggleButton());
     }
 
-    static Button prepareNavButton(String destination) {
+    static Button prepareNavButton(Object controller, String destination) {
         Button button = new Button();
 
         button.setText(destination);
-        button.setOnAction(event -> NavHelper.switchScreen((Node) event.getSource()));
+        button.setOnAction(event -> {
+
+            String controllerName = controller.getClass().getSimpleName();
+
+            if (controllerName.equals("PlayerController")) {
+                PlayerController tempController = (PlayerController) controller;
+
+                tempController.stopFile();
+                tempController.stopDb();
+            }
+
+            NavHelper.switchScreen((Node) event.getSource());
+        });
 
         return button;
     }

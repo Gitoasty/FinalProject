@@ -96,9 +96,9 @@ public class AdditionController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        navPane.getChildren().add(SetupHelper.prepareNavButton("Import"));
-        navPane.getChildren().add(SetupHelper.prepareNavButton("Player"));
-        navPane.getChildren().add(SetupHelper.prepareNavButton("EditSongs"));
+        navPane.getChildren().add(SetupHelper.prepareNavButton(this, "Import"));
+        navPane.getChildren().add(SetupHelper.prepareNavButton(this, "Player"));
+        navPane.getChildren().add(SetupHelper.prepareNavButton(this, "EditSongs"));
         navPane.getChildren().add(SetupHelper.prepareToggleButton());
 
         artistBox.setConverter(new StringConverter<>() {

@@ -334,9 +334,9 @@ public class ImportController implements Initializable {
             }
         });
 
-        navPane.getChildren().add(SetupHelper.prepareNavButton("Player"));
-        navPane.getChildren().add(SetupHelper.prepareNavButton("EditSongs"));
-        navPane.getChildren().add(SetupHelper.prepareNavButton("Additions"));
+        navPane.getChildren().add(SetupHelper.prepareNavButton(this, "Player"));
+        navPane.getChildren().add(SetupHelper.prepareNavButton(this, "EditSongs"));
+        navPane.getChildren().add(SetupHelper.prepareNavButton(this, "Additions"));
         navPane.getChildren().add(SetupHelper.prepareToggleButton());
     }
 }

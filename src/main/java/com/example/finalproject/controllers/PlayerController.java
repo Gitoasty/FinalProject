@@ -204,6 +204,7 @@ public class PlayerController implements Initializable {
             temp.delete();
         } catch (Exception _) {}
 
+        stopDb();
         return serveSong(songData);
     }
 
@@ -249,7 +250,7 @@ public class PlayerController implements Initializable {
         }
     }
 
-    private void stopFile() {
+    public void stopFile() {
         if (filePlayer != null) {
             filePlayer.stop();
             filePlayer.dispose();
@@ -265,7 +266,7 @@ public class PlayerController implements Initializable {
         startDbProgressUpdater();
     }
 
-    private void stopDb() {
+    public void stopDb() {
         dbPlayer.controls().stop();
         if (server != null) {
             server.stop(0);
@@ -382,11 +383,6 @@ public class PlayerController implements Initializable {
 
             int port = server.getAddress().getPort();
             String url = "http://127.0.0.1:" + port + path;
-
-            System.setProperty(
-                    "jna.library.path",
-                    "C:\\Program Files\\VideoLAN\\VLC"
-            );
 
             return url;
         } catch (Exception _) {
@@ -733,7 +729,7 @@ public class PlayerController implements Initializable {
             }
         });
 
-        SetupHelper.generalSetup(progressBar, volumeBar, songList, navPane);
+        SetupHelper.generalSetup(this, progressBar, volumeBar, songList, navPane);
 
         initialSetup(playerMode);
 
